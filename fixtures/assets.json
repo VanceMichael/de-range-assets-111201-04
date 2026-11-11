@@ -1,0 +1,31 @@
+{
+  "bundle": "survey-1",
+  "generation": 1,
+  "members": [
+    {
+      "name": "map.bin",
+      "size": 6,
+      "sha256": "bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721",
+      "etag": "\"a1\""
+    }
+  ],
+  "faults": [
+    {
+      "at": "range_request",
+      "response": 200
+    },
+    {
+      "at": "after_chunk_write",
+      "action": "stop"
+    },
+    {
+      "at": "resume",
+      "etag": "\"a2\"",
+      "data": "YWJjWFl6"
+    },
+    {
+      "at": "range_request",
+      "response": 416
+    }
+  ]
+}
