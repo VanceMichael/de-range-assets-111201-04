@@ -1,5 +1,6 @@
 import argparse
 import json
+import sys
 from pathlib import Path
 import tempfile
 
@@ -8,17 +9,17 @@ from .storage import Store
 from .transport import Client, replay_server
 
 
-def main():
+def _legacy_main(argv=None):
     parser = argparse.ArgumentParser(description='本地采集与凭据查看')
     parser.add_argument('command', choices=['demo', 'import', 'show', 'serve'])
     parser.add_argument('--input', default='fixtures/sample.json')
     parser.add_argument('--db', default='var/records.sqlite3')
     parser.add_argument('--port', type=int, default=8080)
-    arguments = parser.parse_args()
+    arguments = parser.parse_args(argv)
     if arguments.command == 'serve':
         from .api import serve
         serve(arguments.db, arguments.port)
-        return
+        return 0
     if arguments.command == 'demo':
         with tempfile.TemporaryDirectory() as directory:
             payload = Path(arguments.input).read_bytes()
@@ -31,7 +32,7 @@ def main():
                 digest = store.ingest('本地演示来源', raw, rows)
                 print(json.dumps(dict(digest=digest, records=store.records(), requests=len(calls)), ensure_ascii=False, indent=2))
                 store.close()
-        return
+        return 0
     Path(arguments.db).parent.mkdir(parents=True, exist_ok=True)
     store = Store(arguments.db)
     try:
@@ -41,7 +42,17 @@ def main():
         print(json.dumps(store.records(), ensure_ascii=False, indent=2))
     finally:
         store.close()
+    return 0
+
+
+def main():
+    # 旧 import/show/serve 沿用原入口；demo 为下载层端到端故障演示。
+    legacy = {'import', 'show', 'serve'}
+    if len(sys.argv) > 1 and sys.argv[1] in legacy:
+        return _legacy_main()
+    from .cli import main as cli_main
+    return cli_main()
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
